@@ -42,6 +42,8 @@ def DDNS():
     ret = ChangeRecord(domain, record_type, ip)
     if ret.startswith('Error'):
         return jsonify({'code': 3, 'msg': ret}), 500
+    elif ret == "NoChange":
+        return jsonify({'code': 0, 'msg': 'OK, No Change'}), 200
     else:
         return jsonify({'code': 0, 'msg': 'OK'}), 200
 

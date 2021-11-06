@@ -33,6 +33,16 @@ def GetRecordId(record_name, record_type):
     
     return 'Error: Not found'
 
+def GetRecordValue(record_id):
+    payload = {
+        'record_id': record_id,
+        'remark': '',
+    }
+    payload.update(common_payload)
+    r = requests.post('https://dnsapi.cn/Record.Info', headers=common_headers, data=payload)
+    record_data = json.loads(r.text)
+    return record_data['record']['value']
+
 def ChangeRecord(record_name, record_type, record_value):
     id = GetRecordId(record_name, record_type)
 
@@ -41,6 +51,9 @@ def ChangeRecord(record_name, record_type, record_value):
     
     if record_type != 'A' and record_type != 'AAAA':
         return 'Error: Record type not support'
+    
+    if record_value == GetRecordValue(id):
+        return 'NoChange'
     
     payload = {
         'record_line': RECORD_LINE,
