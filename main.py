@@ -2,8 +2,8 @@ from flask import Flask
 from flask import request
 from flask import jsonify
 from ipaddress import ip_address, IPv4Address
-from dnspod import ChangeRecord
-from config import TOKEN
+from dnspod import DNSPod
+from config import CONFIG_DATA
 
 app = Flask(__name__)
 
@@ -23,7 +23,12 @@ def DDNS():
     domain = request.args.get('domain')
     token = request.args.get('token')
 
-    if token != TOKEN:
+    matchConfig = None
+    for config in CONFIG_DATA:
+        if config['token'] == token:
+            matchConfig = config['dnspod']
+
+    if matchConfig == None:
         return jsonify({'code': 1, 'msg': 'Invalid token'}), 403
 
     if request.environ.get('HTTP_X_FORWARDED_FOR') is None:
@@ -39,7 +44,8 @@ def DDNS():
     else:
         return jsonify({'code': 2, 'msg': 'Bad IP'}), 400
     
-    ret = ChangeRecord(domain, record_type, ip)
+    dnspod = DNSPod(matchConfig)
+    ret = dnspod.ChangeRecord(domain, record_type, ip)
     if ret.startswith('Error'):
         return jsonify({'code': 3, 'msg': ret}), 500
     elif ret == "NoChange":
